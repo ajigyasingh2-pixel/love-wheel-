@@ -2,163 +2,186 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Ruota della Fortuna dell'Amore 💖</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruota della Fortuna Romantica</title>
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-      height: 100vh;
-      overflow: hidden;
+      padding: 0;
+      background: #ffe6f0;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: "Comic Sans MS", cursive, sans-serif;
     }
 
-    h1 {
-      color: white;
-      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    canvas {
+      margin-top: 50px;
     }
 
-    .wheel-container {
-      position: relative;
-      width: 300px;
-      height: 300px;
-      margin: 20px;
-    }
-
-    .wheel {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      border: 8px solid #fff;
-      position: relative;
-      transition: transform 5s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-      background: conic-gradient(
-        #ff6b81 0deg 45deg,
-        #ffb347 45deg 90deg,
-        #ff6b81 90deg 135deg,
-        #ffb347 135deg 180deg,
-        #ff6b81 180deg 225deg,
-        #ffb347 225deg 270deg,
-        #ff6b81 270deg 315deg,
-        #ffb347 315deg 360deg
-      );
-    }
-
-    .pointer {
-      position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0; 
-      height: 0; 
+    /* Triangolino indicatore */
+    .arrow {
+      width: 0;
+      height: 0;
       border-left: 20px solid transparent;
       border-right: 20px solid transparent;
-      border-bottom: 30px solid white;
-      z-index: 10;
+      border-bottom: 40px solid #ff3366;
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
     }
 
     button {
-      padding: 10px 20px;
+      margin-top: 20px;
+      padding: 12px 24px;
       font-size: 18px;
-      background: #fff;
       border: none;
       border-radius: 10px;
+      background: #ff6699;
+      color: white;
       cursor: pointer;
-      margin-top: 20px;
-      transition: transform 0.2s;
+      transition: 0.3s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     button:hover {
-      transform: scale(1.1);
-      background: #ffe0e0;
+      background: #ff3366;
     }
 
+    /* Messaggio gigante */
     .message {
-      margin-top: 20px;
-      font-size: 22px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 3rem;
       font-weight: bold;
-      color: #fff;
-      opacity: 0;
-      transition: opacity 1s;
+      color: #ff3366;
+      text-shadow: 2px 2px 8px #00000055;
+      z-index: 5;
+      animation: none;
       text-align: center;
-    }
-    .message.show {
-      opacity: 1;
+      padding: 20px;
     }
 
-    /* Cuoricini cadenti */
+    @keyframes pop {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* Cuoricini che cadono */
     .heart {
       position: fixed;
       top: -10px;
+      color: #ff3366;
       font-size: 20px;
-      color: red;
       animation: fall linear forwards;
-      z-index: 0;
     }
-
     @keyframes fall {
       to {
-        transform: translateY(100vh) rotate(360deg);
+        transform: translateY(110vh);
         opacity: 0;
       }
     }
   </style>
 </head>
 <body>
-  <h1>Ruota della Fortuna dell'Amore 💖</h1>
-
-  <div class="wheel-container">
-    <div class="pointer"></div>
-    <div class="wheel" id="wheel"></div>
-  </div>
-
-  <button onclick="spin()">Gira la Ruota 🎡</button>
-  <div id="message" class="message"></div>
+  <div class="arrow"></div>
+  <canvas id="wheel" width="400" height="400"></canvas>
+  <button onclick="spin()">Gira la Ruota ❤️</button>
+  <div class="message" id="message"></div>
 
   <script>
-    const wheel = document.getElementById("wheel");
-    const messageDiv = document.getElementById("message");
-    let deg = 0;
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
 
     const messages = [
-      "Sei la mia persona preferita 💕",
-      "Ti penso sempre 😘",
-      "Un bacio per te 💋",
-      "Non potrei stare senza di te 💖",
-      "Sei speciale 🌟",
-      "Ti mando un abbraccio forte 🤗",
-      "Sei la mia metà 💞",
-      "Ti voglio bene con tutto il cuore ❤️"
+      "Un abbraccio forte 🤗",
+      "Un bacio speciale 😘",
+      "Ti penso sempre 💭",
+      "Sei unica 💎",
+      "Ti voglio bene 💖",
+      "Il mio cuore è tuo ❤️",
+      "Ti mando un sorriso 😊",
+      "Con te sono felice 🌹"
     ];
 
-    function spin() {
-      messageDiv.classList.remove("show");
-      const randomDeg = Math.floor(5000 + Math.random() * 5000);
-      deg += randomDeg;
-      wheel.style.transform = `rotate(${deg}deg)`;
+    const colors = ["#ffb3c6","#ffccd5","#ffc2d1","#ff8fab","#fb6f92","#ff4d6d","#ff758f","#ffb5a7"];
+    const numSegments = messages.length;
+    const arcSize = (2 * Math.PI) / numSegments;
+    let angle = 0;
+    let spinning = false;
 
-      setTimeout(() => {
-        const index = Math.floor((deg % 360) / 45);
-        const msg = messages[index];
-        messageDiv.textContent = msg;
-        messageDiv.classList.add("show");
-      }, 5000);
+    function drawWheel() {
+      ctx.clearRect(0,0,400,400);
+      for (let i=0; i<numSegments; i++) {
+        const start = angle + i * arcSize;
+        const end = start + arcSize;
+        ctx.beginPath();
+        ctx.moveTo(200,200);
+        ctx.arc(200,200,200,start,end);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(200,200);
+        ctx.rotate(start + arcSize/2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#333";
+        ctx.font = "16px Arial";
+        ctx.fillText(messages[i], 180,10);
+        ctx.restore();
+      }
     }
 
-    // Creazione cuoricini che cadono
+    function spin() {
+      if (spinning) return;
+      spinning = true;
+      let spinAngle = Math.random() * 2000 + 2000;
+      let spinTime = 0;
+      let spinTimeTotal = 3000 + Math.random()*2000;
+
+      function rotate() {
+        spinTime += 20;
+        if (spinTime >= spinTimeTotal) {
+          stopRotateWheel(spinAngle);
+          return;
+        }
+        const spinAngleIncrement = spinAngle * (1 - spinTime/spinTimeTotal);
+        angle += (spinAngleIncrement * Math.PI / 180);
+        drawWheel();
+        requestAnimationFrame(rotate);
+      }
+      rotate();
+    }
+
+    function stopRotateWheel(spinAngle) {
+      const degrees = angle * 180 / Math.PI + 90;
+      const arcd = arcSize * 180 / Math.PI;
+      const index = Math.floor((360 - (degrees % 360)) / arcd) % numSegments;
+
+      const message = document.getElementById("message");
+      message.innerText = messages[index];
+      message.style.animation = "pop 0.8s ease forwards";
+
+      spinning = false;
+    }
+
+    drawWheel();
+
+    // Cuoricini animati
     function createHeart() {
       const heart = document.createElement("div");
       heart.classList.add("heart");
-      heart.style.left = Math.random() * 100 + "vw";
-      heart.style.animationDuration = (3 + Math.random() * 5) + "s";
-      heart.textContent = "💖";
+      heart.innerHTML = "❤";
+      heart.style.left = Math.random()*100 + "vw";
+      heart.style.animationDuration = 3 + Math.random()*2 + "s";
       document.body.appendChild(heart);
-
-      setTimeout(() => {
-        heart.remove();
-      }, 8000);
+      setTimeout(()=>heart.remove(),5000);
     }
     setInterval(createHeart, 500);
   </script>
